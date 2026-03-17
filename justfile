@@ -20,11 +20,11 @@ setup:
 
 # Create a new config from a natural language description
 remember *ARGS:
-    cd {{justfile_directory()}} && claude -p "/remember {{ARGS}}"
+    cd {{justfile_directory()}} && claude -p "/remember {{ARGS}}" --allowedTools "Bash,Read,Write"
 
 # Compile all configs → Hammerspoon Lua (includes validation)
 compile:
-    cd {{justfile_directory()}} && claude -p "/compile"
+    cd {{justfile_directory()}} && claude -p "/compile" --allowedTools "Bash,Read,Write"
 
 # Show current configs and compiled state
 status:
