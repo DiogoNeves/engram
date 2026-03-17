@@ -8,6 +8,8 @@ setup:
     brew install --cask hammerspoon
     brew install switchaudio-osx blueutil
     mkdir -p ~/.hammerspoon/engram
+    @# Drop a stub engram loader so Hammerspoon doesn't crash before first compile
+    @test -f ~/.hammerspoon/engram/init.lua || printf '-- engram: run "just compile" to generate your automation\nreturn {}\n' > ~/.hammerspoon/engram/init.lua
     @# Ensure init.lua exists
     @touch ~/.hammerspoon/init.lua
     @# Add hs.ipc (enables CLI) if not already present
