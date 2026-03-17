@@ -25,7 +25,7 @@ cd engram
 just setup
 
 # 3. Describe what you want
-just remember "always use my Rode mic as audio input, even when Bluetooth devices connect"
+just remember "natural scroll direction when using the trackpad, reversed when using a mouse"
 
 # 4. Compile to Hammerspoon
 just compile
@@ -41,17 +41,19 @@ A config looks like this:
 
 ```markdown
 ---
-name: audio-routing
-description: Route audio to USB mic when connected
+name: scroll-direction
+description: Natural scrolling on trackpad, reversed when a mouse is connected
 triggers:
   - type: usb
     match:
-      productName: "Rode NT-USB"
+      vendorName: "Apple"
     event: added
+  - type: usb
+    event: removed
 ---
 
-When my Rode NT-USB is connected, always use it as the default audio input,
-even if I connect Bluetooth headphones afterward.
+When a USB mouse is connected, use reversed (traditional) scroll direction.
+When no mouse is connected, restore natural scroll direction for the trackpad.
 ```
 
 ## Commands
