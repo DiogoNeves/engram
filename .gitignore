@@ -1,0 +1,11 @@
+# User configs and state (gitkeep the directories)
+configs/*
+!configs/.gitkeep
+state/*
+!state/.gitkeep
+
+# Claude Code
+.claude/settings.local.json
+
+# macOS
+.DS_Store
