@@ -8,11 +8,15 @@ setup:
     brew install --cask hammerspoon
     brew install switchaudio-osx blueutil
     mkdir -p ~/.hammerspoon/engram
+    @# Ensure init.lua exists
+    @touch ~/.hammerspoon/init.lua
+    @# Add hs.ipc (enables CLI) if not already present
+    @grep -q 'require("hs.ipc")' ~/.hammerspoon/init.lua || echo 'require("hs.ipc")' >> ~/.hammerspoon/init.lua
+    @# Add engram loader if not already present
+    @grep -q 'require("engram")' ~/.hammerspoon/init.lua || echo 'require("engram")' >> ~/.hammerspoon/init.lua
     @echo ""
-    @echo "Done! Next steps:"
-    @echo "  1. Open Hammerspoon and enable the CLI: Preferences → Enable CLI (hs)"
-    @echo "  2. Add this line to ~/.hammerspoon/init.lua:"
-    @echo '     require("engram")'
+    @echo "Done! Added require(\"hs.ipc\") and require(\"engram\") to ~/.hammerspoon/init.lua"
+    @echo "Open Hammerspoon.app to start it, then run: just compile"
 
 # Create a new config from a natural language description
 remember *ARGS:
