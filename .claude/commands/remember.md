@@ -2,7 +2,7 @@ Create a new engram config from a natural language description.
 
 The user wants: $ARGUMENTS
 
-## IMPORTANT: This runs non-interactively via `claude -p`. Do NOT ask questions, do NOT wait for confirmation. Inspect the system, make reasonable decisions, and produce the output. If something is ambiguous, make the best choice and note your assumption in the output.
+## IMPORTANT: Bias towards action. Always inspect the system yourself rather than asking the user. Make reasonable decisions and note your assumptions. Only ask the user a question if there is a genuine ambiguity you cannot resolve by inspecting the system (e.g. the user mentions "my microphone" but two USB mics are connected).
 
 ## Instructions
 
