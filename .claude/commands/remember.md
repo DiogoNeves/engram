@@ -2,6 +2,8 @@ Create a new engram config from a natural language description.
 
 The user wants: $ARGUMENTS
 
+## IMPORTANT: This runs non-interactively via `claude -p`. Do NOT ask questions, do NOT wait for confirmation. Inspect the system, make reasonable decisions, and produce the output. If something is ambiguous, make the best choice and note your assumption in the output.
+
 ## Instructions
 
 1. **ALWAYS inspect the system first.** Before doing anything else, query the current macOS state to fill in any details the user didn't specify. Use `hs -c` commands (see the engram-inspect skill) to look up device names, current defaults, transport types, etc. Never ask the user for information you can look up yourself — just go check.
