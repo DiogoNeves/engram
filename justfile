@@ -22,11 +22,11 @@ setup:
 
 # Create a new config from a natural language description
 remember *ARGS:
-    cd {{justfile_directory()}} && claude -p "/remember {{ARGS}}" --allowedTools "Bash,Read,Write"
+    cd {{justfile_directory()}} && claude -p "/remember {{ARGS}}" --allowedTools "Bash,Read,Write" --model claude-haiku-4-5-20251001
 
 # Compile all configs → Hammerspoon Lua (includes validation)
 compile:
-    cd {{justfile_directory()}} && claude -p "/compile" --allowedTools "Bash,Read,Write"
+    cd {{justfile_directory()}} && claude -p "/compile" --allowedTools "Bash,Read,Write" --model claude-haiku-4-5-20251001
 
 # Show current configs and compiled state
 status:
