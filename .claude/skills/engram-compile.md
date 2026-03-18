@@ -96,24 +96,18 @@ https://www.hammerspoon.org/docs/hs.<module>.html
 ```
 Examples: `hs.eventtap.html`, `hs.audiodevice.html`, `hs.usb.html`, `hs.screen.html`
 
-**Known pitfalls — do not repeat these mistakes:**
+**Reasoning principles — apply these to any API, not just known cases:**
 
-1. **`defaults write` does not apply live.** Writing to `NSGlobalDomain` via `defaults write`
-   updates the pref file but macOS does not apply it to running processes (including scroll
-   direction). For anything that needs to take effect immediately, use the appropriate Hammerspoon
-   API instead. For scroll direction: use `hs.eventtap` to intercept and flip scroll events.
-   See the "Scroll direction" section in `schema/capabilities.md` for the correct pattern.
+1. **Verify the actual effect, not just the surface call.** Before using any mechanism to change
+   system state (shell commands, preference writes, API calls), ask: does this *notify* the
+   relevant subsystem, or just update a file/value that something else reads later? If it only
+   writes data without signalling the consumer, it won't apply live. When in doubt, check the
+   docs or test with `hs -c`. Prefer Hammerspoon-native APIs over shell commands — they're more
+   likely to go through the right channels.
 
-2. **`hs.audiodevice.watcher` event names.** The events are:
-   - `"dIn"` = input device list changed (NOT "default input changed")
-   - `"dOut"` = output device list changed
-   - `"dev#"` = default device changed (NOT "device added/removed")
-   - `"vol#"` and `"mute"` fire on every volume/mute change — always filter these out.
-
-3. **Watcher callbacks don't fire at startup.** Always check the current state when the module
-   loads (e.g. `hs.usb.attachedDevices()`, `hs.audiodevice.defaultInputDevice()`) and apply
-   the correct initial state before starting watchers.
-
-4. **Race conditions on device switch.** When macOS changes a default device (Bluetooth connect
-   etc.), it fires multiple events and may override your changes synchronously. Use
-   `hs.timer.doAfter(0.5, function() ... end)` to defer actions and let macOS settle first.
+2. **Watchers are reactive, not complete.** A watcher only fires on *changes* — it tells you
+   nothing about the state that existed before it started. Always read current state at module
+   load time and apply the correct initial behaviour, then use the watcher to track changes.
+   Similarly, when an OS subsystem fires multiple events in sequence (device connect, default
+   switch, etc.), your synchronous response may be overridden by a later event. Defer actions
+   with `hs.timer.doAfter` when responding to OS state transitions.
