@@ -148,13 +148,42 @@ local app = hs.application.find("App Name")
 if app then app:kill() end
 ```
 
-### Trackpad scroll direction
+### Scroll direction per input device (mouse vs trackpad)
+
+**DO NOT use `defaults write NSGlobalDomain com.apple.swipescrolldirection` for live scroll
+direction changes.** It updates the preference file but does NOT notify the macOS input stack —
+scroll behavior will not change until logout/login. This is a macOS limitation.
+
+**The correct approach is `hs.eventtap`** — intercept scroll wheel events and flip them for mouse
+only, leaving trackpad events untouched:
+
 ```lua
--- via defaults command
-hs.execute("defaults write NSGlobalDomain com.apple.swipescrolldirection -bool true")
--- true = natural scrolling, false = traditional
--- Note: requires logout or private framework call to apply immediately
+-- Docs: https://www.hammerspoon.org/docs/hs.eventtap.html
+-- Docs: https://www.hammerspoon.org/docs/hs.eventtap.event.html
+
+module.scrollTap = hs.eventtap.new({hs.eventtap.event.types.scrollWheel}, function(event)
+    -- scrollWheelEventIsContinuous: 0 = mouse (discrete wheel), 1 = trackpad (smooth/continuous)
+    local isContinuous = event:getProperty(
+        hs.eventtap.event.properties.scrollWheelEventIsContinuous)
+    if isContinuous == 0 then
+        -- Reverse mouse scroll only; trackpad passes through unchanged
+        local d1  = event:getProperty(hs.eventtap.event.properties.scrollWheelEventDeltaAxis1)
+        local d2  = event:getProperty(hs.eventtap.event.properties.scrollWheelEventDeltaAxis2)
+        local fp1 = event:getProperty(hs.eventtap.event.properties.scrollWheelEventFixedPtDeltaAxis1)
+        local fp2 = event:getProperty(hs.eventtap.event.properties.scrollWheelEventFixedPtDeltaAxis2)
+        event:setProperty(hs.eventtap.event.properties.scrollWheelEventDeltaAxis1,          -d1)
+        event:setProperty(hs.eventtap.event.properties.scrollWheelEventDeltaAxis2,          -d2)
+        event:setProperty(hs.eventtap.event.properties.scrollWheelEventFixedPtDeltaAxis1,  -fp1)
+        event:setProperty(hs.eventtap.event.properties.scrollWheelEventFixedPtDeltaAxis2,  -fp2)
+    end
+    return false  -- pass the (modified) event through
+end)
+
+-- Start tap when external mouse connects, stop when it disconnects:
+module.scrollTap:start()   -- or :stop()
 ```
+
+Requires Accessibility permission (Hammerspoon usually has this already).
 
 ## Inspection via CLI
 
@@ -177,19 +206,22 @@ Every compiled module should:
 4. Use `hs.notify` to give user feedback when actions fire
 5. Include a comment header with source config path and compilation timestamp
 6. **Check initial state at startup** — watchers only fire on changes, not on load. If a device
-   might already be connected when Hammerspoon starts, read current state immediately:
+   might already be connected when Hammerspoon starts, apply the correct state immediately:
    ```lua
-   -- Example: USB watcher with startup check
-   local function applyScrollDirection(mouseConnected)
-       hs.execute("defaults write NSGlobalDomain com.apple.swipescrolldirection -bool " ..
-           (mouseConnected and "false" or "true"))
-   end
-   -- Apply at startup
+   -- Check at startup, then watch for changes
    for _, d in pairs(hs.usb.attachedDevices()) do
-       if d.productName == "My Mouse" then applyScrollDirection(true); break end
+       if d.productName == "My Mouse" then
+           module.scrollTap:start()
+           print("my-module: mouse already connected at startup, tap active")
+           break
+       end
    end
-   -- Then watch for changes
    module.usbWatcher = hs.usb.watcher.new(function(device) ... end):start()
    ```
-7. **Add `print()` logging** for all watcher callbacks and key actions — output appears in the
-   Hammerspoon Console (menubar → Console). This is the primary debugging mechanism.
+7. **Always add `print()` logging** in every watcher callback and at every key action point.
+   Output appears in the Hammerspoon Console (menubar → Console) and is the primary debugging
+   tool. Log format: `"module-name: what happened"`. Example:
+   ```lua
+   print("scroll-direction: Razer connected, scroll reversal active")
+   print("keep-blue-snowball-mic: event=" .. event .. ", setting Blue Snowball as default")
+   ```

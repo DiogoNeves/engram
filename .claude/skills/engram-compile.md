@@ -83,3 +83,37 @@ Print a clear summary:
 - Use `hs.notify` for user-visible feedback when rules fire
 - For Bluetooth polling, use `hs.timer.doEvery()` with `hs.task.new()` (async, non-blocking)
 - Generated files must have the "DO NOT EDIT" header comment
+- **Always add `print()` logging** in every callback and at every key action — this is the only
+  way to debug compiled modules. Format: `"module-name: description"`. Never compile a module
+  without logging.
+
+## Consult the Hammerspoon docs when in doubt
+
+The Hammerspoon API docs are at **https://www.hammerspoon.org/docs/**. If `schema/capabilities.md`
+doesn't cover an API you need, or you're unsure how something works, fetch the relevant doc page:
+```
+https://www.hammerspoon.org/docs/hs.<module>.html
+```
+Examples: `hs.eventtap.html`, `hs.audiodevice.html`, `hs.usb.html`, `hs.screen.html`
+
+**Known pitfalls — do not repeat these mistakes:**
+
+1. **`defaults write` does not apply live.** Writing to `NSGlobalDomain` via `defaults write`
+   updates the pref file but macOS does not apply it to running processes (including scroll
+   direction). For anything that needs to take effect immediately, use the appropriate Hammerspoon
+   API instead. For scroll direction: use `hs.eventtap` to intercept and flip scroll events.
+   See the "Scroll direction" section in `schema/capabilities.md` for the correct pattern.
+
+2. **`hs.audiodevice.watcher` event names.** The events are:
+   - `"dIn"` = input device list changed (NOT "default input changed")
+   - `"dOut"` = output device list changed
+   - `"dev#"` = default device changed (NOT "device added/removed")
+   - `"vol#"` and `"mute"` fire on every volume/mute change — always filter these out.
+
+3. **Watcher callbacks don't fire at startup.** Always check the current state when the module
+   loads (e.g. `hs.usb.attachedDevices()`, `hs.audiodevice.defaultInputDevice()`) and apply
+   the correct initial state before starting watchers.
+
+4. **Race conditions on device switch.** When macOS changes a default device (Bluetooth connect
+   etc.), it fires multiple events and may override your changes synchronously. Use
+   `hs.timer.doAfter(0.5, function() ... end)` to defer actions and let macOS settle first.
