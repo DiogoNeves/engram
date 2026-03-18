@@ -111,3 +111,8 @@ Examples: `hs.eventtap.html`, `hs.audiodevice.html`, `hs.usb.html`, `hs.screen.h
    Similarly, when an OS subsystem fires multiple events in sequence (device connect, default
    switch, etc.), your synchronous response may be overridden by a later event. Defer actions
    with `hs.timer.doAfter` when responding to OS state transitions.
+
+3. **Native objects outlive Lua reloads.** Hammerspoon reloads recreate the Lua state, but
+   C-backed objects (eventtaps, watchers) may keep running past GC. If a module creates such an
+   object, store it in a `_G` global and stop it at the top of the module before creating a new
+   one — otherwise multiple instances stack up across reloads and interfere with each other.

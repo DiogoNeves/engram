@@ -218,6 +218,15 @@ Every compiled module should:
    end
    module.usbWatcher = hs.usb.watcher.new(function(device) ... end):start()
    ```
+8. **Guard against stale instances across reloads.** Hammerspoon's `hs.reload()` recreates the
+   Lua state, but C-backed objects (`hs.eventtap`, some watchers) can outlive Lua GC and keep
+   running. For any eventtap, store it in a `_G` global and stop it at module load time:
+   ```lua
+   if _G._myModuleTap then _G._myModuleTap:stop() end
+   module.myTap = hs.eventtap.new(...)
+   _G._myModuleTap = module.myTap
+   ```
+
 7. **Always add `print()` logging** in every watcher callback and at every key action point.
    Output appears in the Hammerspoon Console (menubar → Console) and is the primary debugging
    tool. Log format: `"module-name: what happened"`. Example:
