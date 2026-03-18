@@ -20,11 +20,20 @@ end):start()
 Global watcher for audio device changes (device added/removed, default changed).
 ```lua
 hs.audiodevice.watcher.setCallback(function(event)
-    -- event: "dIn" (default input changed), "dOut" (default output changed),
-    --        "dev#" (device added/removed), "sOut" (system output changed)
+    -- event: "dIn"  = input device list changed (device added/removed from inputs)
+    --        "dOut" = output device list changed (device added/removed from outputs)
+    --        "dev#" = default input or output device changed
+    --        "mute" = mute status changed
+    --        "vol#" = volume changed
+    --        "sOut" = system output device changed
+    -- NOTE: "dev#" and "dIn"/"dOut" are the important ones for device switching logic.
+    -- Always filter by event type — "vol#" and "mute" fire frequently on any volume change.
 end)
 hs.audiodevice.watcher.start()
 ```
+**Timing:** When macOS switches the default device (e.g. Bluetooth headphones connect), it fires
+multiple events in sequence and may override changes made inside the callback. Use
+`hs.timer.doAfter(0.5, function() ... end)` to defer the action and let macOS finish first.
 
 ### hs.wifi.watcher
 Fires when the WiFi network changes.
@@ -167,3 +176,20 @@ Every compiled module should:
 3. Start watchers immediately
 4. Use `hs.notify` to give user feedback when actions fire
 5. Include a comment header with source config path and compilation timestamp
+6. **Check initial state at startup** — watchers only fire on changes, not on load. If a device
+   might already be connected when Hammerspoon starts, read current state immediately:
+   ```lua
+   -- Example: USB watcher with startup check
+   local function applyScrollDirection(mouseConnected)
+       hs.execute("defaults write NSGlobalDomain com.apple.swipescrolldirection -bool " ..
+           (mouseConnected and "false" or "true"))
+   end
+   -- Apply at startup
+   for _, d in pairs(hs.usb.attachedDevices()) do
+       if d.productName == "My Mouse" then applyScrollDirection(true); break end
+   end
+   -- Then watch for changes
+   module.usbWatcher = hs.usb.watcher.new(function(device) ... end):start()
+   ```
+7. **Add `print()` logging** for all watcher callbacks and key actions — output appears in the
+   Hammerspoon Console (menubar → Console). This is the primary debugging mechanism.

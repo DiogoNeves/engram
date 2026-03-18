@@ -28,3 +28,12 @@ Plain-English macOS automation compiled to Hammerspoon Lua via Claude Code skill
 
 Use `hs -c "<lua>"` to query live macOS state via Hammerspoon CLI.
 Requires `hs.ipc` to be loaded in the user's Hammerspoon config.
+
+## Debugging Hammerspoon scripts
+
+- **Console logs**: Click the Hammerspoon menubar icon → Console, or run `hs -c "print(...)"` from terminal
+- **Read console history**: `hs -c "print(hs.console.getConsole())"` to dump recent log output
+- **Check module loaded**: `hs -c "print(package.loaded['engram.module-name'] ~= nil)"`
+- **Add logging in Lua**: Use `print("message")` — output appears in the Hammerspoon Console
+- **Test expressions live**: `hs -c "print(hs.audiodevice.allInputDevices()[1]:name())"` etc.
+- **Force reload**: `hs -c "hs.reload()"` or press the reload button in the Console window
